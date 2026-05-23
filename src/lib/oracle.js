@@ -136,22 +136,20 @@ Respond with ONLY a single JSON object — no markdown fences, no commentary, no
 }
 
 export async function analyzePost(postText, platform, isImage) {
-  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error('VITE_ANTHROPIC_API_KEY is not set in your .env file');
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  if (!apiKey) throw new Error('VITE_OPENAI_API_KEY is not set in your .env file');
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-      'content-type': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + import.meta.env.VITE_OPENAI_API_KEY,
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'gpt-4o',
       max_tokens: 1500,
-      system: SYSTEM_PROMPT,
       messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: buildUserPrompt(postText, platform, isImage) },
       ],
     }),
@@ -159,11 +157,11 @@ export async function analyzePost(postText, platform, isImage) {
 
   if (!response.ok) {
     const err = await response.text().catch(() => response.statusText);
-    throw new Error(`Anthropic API error ${response.status}: ${err}`);
+    throw new Error(`OpenAI API error ${response.status}: ${err}`);
   }
 
   const data = await response.json();
-  const raw = data?.content?.[0]?.text ?? '';
+  const raw = data.choices[0].message.content ?? '';
 
   const match = raw.match(/\{[\s\S]*\}/);
   if (!match) throw new Error(`CTTO oracle returned no JSON block. Raw response:\n${raw}`);

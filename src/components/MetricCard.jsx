@@ -1,48 +1,77 @@
-export default function MetricCard({ label, sublabel, score, displayValue, color }) {
-  const level = score >= 75 ? 'HIGH' : score >= 45 ? 'MED' : 'LOW';
-  const levelColor = score >= 75 ? '#ff1744' : score >= 45 ? '#ff9800' : '#00e676';
-  const barColor = color || '#ff2d55';
+import { useState } from 'react';
+import { T } from '../lib/theme.js';
+
+export default function MetricCard({ label, sublabel, score, displayValue, color, sysLabel }) {
+  const [hovered, setHovered] = useState(false);
+  const barColor = color || T.accent;
   const shown = displayValue !== undefined ? displayValue : score;
 
   return (
-    <div style={{
-      background: '#161616',
-      border: '1px solid #242424',
-      borderRadius: '10px',
-      padding: '14px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '6px',
-    }}>
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: T.bg2,
+        border: `1px solid ${hovered ? T.borderHover : T.border}`,
+        borderRadius: '14px',
+        padding: '20px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        transition: 'border-color 0.2s, transform 0.2s',
+        transform: hovered ? 'scale(1.02)' : 'scale(1)',
+        cursor: 'default',
+      }}
+    >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <div style={{ color: '#666', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+          <div style={{
+            fontFamily: T.body,
+            color: T.textMuted,
+            fontSize: '10px',
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            fontWeight: 500,
+          }}>
             {label}
           </div>
           {sublabel && (
-            <div style={{ color: '#3a3a3a', fontSize: '9px', marginTop: '2px', letterSpacing: '0.3px' }}>
+            <div style={{
+              fontFamily: T.body,
+              color: T.textMuted,
+              fontSize: '9px',
+              marginTop: '3px',
+              opacity: 0.7,
+            }}>
               {sublabel}
             </div>
           )}
         </div>
-        <span style={{
-          color: levelColor,
-          fontSize: '9px',
-          fontWeight: 700,
-          border: `1px solid ${levelColor}`,
-          borderRadius: '3px',
-          padding: '1px 5px',
-          letterSpacing: '0.5px',
-          flexShrink: 0,
-          marginLeft: '6px',
-        }}>
-          {level}
-        </span>
+        {sysLabel && (
+          <span style={{
+            fontFamily: T.mono,
+            fontSize: '9px',
+            color: T.textMuted,
+            opacity: 0.6,
+            flexShrink: 0,
+            marginLeft: '4px',
+          }}>
+            {sysLabel}
+          </span>
+        )}
       </div>
-      <div style={{ fontSize: '28px', fontWeight: 900, color: barColor, lineHeight: 1 }}>
+
+      <div style={{
+        fontFamily: T.mono,
+        fontSize: '36px',
+        fontWeight: 700,
+        color: barColor,
+        lineHeight: 1,
+      }}>
         {shown}
       </div>
-      <div style={{ height: '3px', background: '#252525', borderRadius: '2px', overflow: 'hidden' }}>
+
+      <div style={{ height: '3px', background: T.bg3, borderRadius: '2px', overflow: 'hidden' }}>
         <div style={{
           width: `${Math.min(100, Math.max(0, score))}%`,
           height: '100%',

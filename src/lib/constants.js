@@ -85,6 +85,10 @@ export const EXAMPLES = [
     name: 'Jeff Bezos',
     text: `People ask me what keeps me motivated after all these years. Here's the truth: we haven't even started yet. Blue Origin just completed its 25th successful crewed mission. Amazon now delivers to 99% of the US population same-day or next-day. The question has never been whether we can build the future — it's whether we're moving fast enough. Looking at the numbers this morning, I think we are.`,
   },
+  {
+    name: 'Mark Zuckerberg',
+    text: `I spent the weekend doing jiu-jitsu. Flow state is real. The key to competing at the highest level is training like you have nothing to lose. Also we shipped 3 new AI features.`,
+  },
 ];
 
 export const VERDICT_LEVELS = {
