@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Home from './pages/Home.jsx';
 import Results from './pages/Results.jsx';
 
-const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
+const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
 const KEY_INVALID = !apiKey || apiKey.trim() === '' || apiKey === 'your_key_here';
 
 function MissingKeyScreen() {
@@ -64,7 +64,7 @@ function MissingKeyScreen() {
           wordBreak: 'break-all',
           lineHeight: 1.6,
         }}>
-          VITE_ANTHROPIC_API_KEY=sk-ant-...
+          VITE_OPENAI_API_KEY=sk-ant-...
         </code>
         <a
           href="https://console.anthropic.com"
