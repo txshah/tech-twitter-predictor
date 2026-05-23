@@ -1,27 +1,88 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { APP_NAME, TAGLINE, EXAMPLES } from '../lib/constants.js';
+import { T } from '../lib/theme.js';
 import DropZone from '../components/DropZone.jsx';
 import { analyzePost } from '../lib/oracle.js';
 
 const PLATFORMS = ['Twitter/X', 'LinkedIn', 'Both'];
 
+const LOADING_MESSAGES = [
+  'deploying simulation agents...',
+  'scanning twitter for ratio energy...',
+  'calculating meme potential...',
+  'consulting the WSB oracle...',
+  'measuring cringe levels...',
+  'predicting quote tweet damage...',
+  'running 847 simulated replies...',
+  'almost done cooking...',
+];
+
+const NOISE_URI = "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%3E%3Cfilter%20id%3D'n'%3E%3CfeTurbulence%20type%3D'fractalNoise'%20baseFrequency%3D'0.65'%20numOctaves%3D'3'%20stitchTiles%3D'stitch'%2F%3E%3CfeColorMatrix%20type%3D'saturate'%20values%3D'0'%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D'100%25'%20height%3D'100%25'%20filter%3D'url(%23n)'%2F%3E%3C%2Fsvg%3E\")";
+
 export default function Home({ onResult }) {
-  const [postText, setPostText] = useState('');
-  const [platform, setPlatform] = useState('Twitter/X');
-  const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [postText, setPostText]         = useState('');
+  const [platform, setPlatform]         = useState('Twitter/X');
+  const [uploadedImageUrl, setImageUrl] = useState(null);
+  const [loading, setLoading]           = useState(false);
+  const [error, setError]               = useState(null);
+  const [ctaHovered, setCtaHovered]     = useState(false);
+  const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
+  const [loadingMsgVisible, setLoadingMsgVisible] = useState(true);
+  const [borderFlash, setBorderFlash]   = useState(null);
+  const [vis, setVis]                   = useState(new Set());
+  const intervalRef                     = useRef(null);
+
+  // Stagger entrance animations
+  useEffect(() => {
+    const ts = [0, 80, 160, 240, 320, 400].map((delay, i) =>
+      setTimeout(() => setVis(s => new Set([...s, i])), delay)
+    );
+    return () => ts.forEach(clearTimeout);
+  }, []);
+
+  // Loading message cycling
+  useEffect(() => {
+    if (loading) {
+      setLoadingMsgIdx(0);
+      setLoadingMsgVisible(true);
+      intervalRef.current = setInterval(() => {
+        setLoadingMsgVisible(false);
+        setTimeout(() => {
+          setLoadingMsgIdx(i => (i + 1) % LOADING_MESSAGES.length);
+          setLoadingMsgVisible(true);
+        }, 300);
+      }, 1200);
+    } else {
+      clearInterval(intervalRef.current);
+    }
+    return () => clearInterval(intervalRef.current);
+  }, [loading]);
+
+  // Border flash easter egg
+  useEffect(() => {
+    const lower = postText.toLowerCase();
+    if (lower.includes('elon')) {
+      setBorderFlash(T.red);
+      const t = setTimeout(() => setBorderFlash(null), 600);
+      return () => clearTimeout(t);
+    }
+    if (lower.includes('zuck')) {
+      setBorderFlash(T.blue);
+      const t = setTimeout(() => setBorderFlash(null), 600);
+      return () => clearTimeout(t);
+    }
+  }, [postText]);
 
   const canSubmit = postText.trim().length > 0 && !loading;
 
   const handleImageChange = (url) => {
     if (uploadedImageUrl) URL.revokeObjectURL(uploadedImageUrl);
-    setUploadedImageUrl(url);
+    setImageUrl(url);
   };
 
   const loadExample = (ex) => {
     if (uploadedImageUrl) URL.revokeObjectURL(uploadedImageUrl);
-    setUploadedImageUrl(null);
+    setImageUrl(null);
     setPostText(ex.text);
     setError(null);
   };
@@ -40,41 +101,115 @@ export default function Home({ onResult }) {
     }
   };
 
-  return (
-    <div style={{
-      minHeight: 'calc(100vh - 52px)',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '48px 20px 64px',
-    }}>
-      {/* Hero */}
-      <div style={{ textAlign: 'center', marginBottom: '44px' }}>
-        <h1 style={{
-          fontSize: 'clamp(30px, 6vw, 62px)',
-          fontWeight: 900,
-          color: '#f0f0f0',
-          letterSpacing: '-2px',
-          lineHeight: 1,
-          marginBottom: '16px',
-        }}>
-          {APP_NAME}
-        </h1>
-        <p style={{
-          color: '#555',
-          fontSize: 'clamp(13px, 1.8vw, 16px)',
-          maxWidth: '400px',
-          lineHeight: 1.65,
-          margin: '0 auto',
-        }}>
-          {TAGLINE}
-        </p>
-      </div>
+  const sec = (i) => `ctto-section${vis.has(i) ? ' visible' : ''}`;
 
-      <div style={{ width: '100%', maxWidth: '640px' }}>
+  const charCountLabel = postText.length === 0
+    ? '0 chars — feed me'
+    : `${postText.length} chars of potential chaos`;
+
+  return (
+    <div style={{ background: T.bg, position: 'relative' }}>
+
+      {/* Noise overlay */}
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundImage: NOISE_URI,
+        backgroundSize: '200px 200px',
+        backgroundRepeat: 'repeat',
+        opacity: 0.03,
+        pointerEvents: 'none',
+        zIndex: 0,
+      }} />
+
+      {/* ── Hero section ── */}
+      <section style={{
+        padding: '48px 5vw 32px',
+        position: 'relative',
+        zIndex: 1,
+      }}>
+        {/* Row 1: CRASH + tagline */}
+        <div className={sec(0)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <span style={{
+            fontFamily: T.display,
+            fontSize: '14vw',
+            lineHeight: 0.9,
+            color: T.textPrimary,
+            userSelect: 'none',
+          }}>
+            CRASH
+          </span>
+          <div style={{
+            fontFamily: T.body,
+            fontSize: '13px',
+            color: T.textSecondary,
+            lineHeight: 1.75,
+            textAlign: 'right',
+            paddingBottom: '1.4vw',
+            flexShrink: 0,
+          }}>
+            <div>Feed it a post.</div>
+            <div>We simulate the chaos.</div>
+            <div>You watch them get cooked.</div>
+          </div>
+        </div>
+
+        {/* Row 2: THE TECH OUT */}
+        <div className={sec(0)} style={{
+          fontFamily: T.display,
+          fontSize: '14vw',
+          lineHeight: 0.9,
+          userSelect: 'none',
+        }}>
+          <span style={{ color: T.textPrimary }}>THE TECH </span>
+          <span style={{ WebkitTextStroke: `2px ${T.textPrimary}`, color: 'transparent' }}>OUT</span>
+        </div>
+
+        {/* Divider */}
+        <div className={sec(1)} style={{ position: 'relative', height: '1px', background: T.border, margin: '28px 0 0' }}>
+          <span style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%,-50%)',
+            background: T.bg3,
+            border: `1px solid ${T.border}`,
+            borderRadius: '100px',
+            padding: '5px 16px',
+            fontFamily: T.body,
+            fontSize: '11px',
+            color: T.textMuted,
+            whiteSpace: 'nowrap',
+          }}>
+            ↓ drop a post and ruin someone's day
+          </span>
+        </div>
+      </section>
+
+      {/* ── Input section ── */}
+      <section style={{
+        maxWidth: '680px',
+        margin: '0 auto',
+        padding: '48px 24px 96px',
+        position: 'relative',
+        zIndex: 1,
+      }}>
+
+        {/* Platform label */}
+        <div className={sec(2)} style={{
+          fontFamily: T.body,
+          fontSize: '10px',
+          color: T.textMuted,
+          textTransform: 'uppercase',
+          letterSpacing: '0.15em',
+          marginBottom: '10px',
+          fontWeight: 500,
+        }}>
+          SELECT PLATFORM // WHERE ARE THEY GETTING COOKED
+        </div>
+
         {/* Platform pills */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+        <div className={sec(2)} style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
           {PLATFORMS.map((p) => {
             const active = platform === p;
             return (
@@ -84,15 +219,15 @@ export default function Home({ onResult }) {
                 style={{
                   padding: '6px 18px',
                   borderRadius: '100px',
-                  border: `1px solid ${active ? '#ff2d55' : '#282828'}`,
-                  background: active ? '#ff2d5514' : 'transparent',
-                  color: active ? '#ff2d55' : '#555',
+                  border: `1px solid ${active ? 'transparent' : T.border}`,
+                  background: active ? T.accent : 'transparent',
+                  color: active ? '#000' : T.textSecondary,
                   fontSize: '12px',
-                  fontWeight: active ? 700 : 400,
-                  fontFamily: 'inherit',
+                  fontFamily: T.body,
+                  fontWeight: active ? 600 : 400,
                   cursor: 'pointer',
-                  letterSpacing: '0.3px',
-                  transition: 'border-color 0.15s, color 0.15s, background 0.15s',
+                  letterSpacing: '0.02em',
+                  transition: 'background 0.2s, color 0.2s, border-color 0.2s',
                 }}
               >
                 {p}
@@ -102,36 +237,39 @@ export default function Home({ onResult }) {
         </div>
 
         {/* Example chips */}
-        <div style={{
+        <div className={sec(3)} style={{
           display: 'flex',
           flexWrap: 'wrap',
           alignItems: 'center',
           gap: '6px',
-          marginBottom: '12px',
+          marginBottom: '14px',
         }}>
-          <span style={{ color: '#383838', fontSize: '11px', flexShrink: 0 }}>Try:</span>
+          <span style={{ fontFamily: T.body, color: T.textMuted, fontSize: '11px', flexShrink: 0 }}>
+            KNOWN OFFENDERS:
+          </span>
           {EXAMPLES.map((ex) => (
             <button
               key={ex.name}
               onClick={() => loadExample(ex)}
-              style={{
-                padding: '4px 12px',
-                borderRadius: '4px',
-                border: '1px solid #222',
-                background: '#0f0f0f',
-                color: '#777',
-                fontSize: '11px',
-                fontFamily: 'inherit',
-                cursor: 'pointer',
-                letterSpacing: '0.2px',
-              }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#383838';
-                e.currentTarget.style.color = '#bbb';
+                e.currentTarget.style.borderColor = T.accent;
+                e.currentTarget.style.color = T.textPrimary;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#222';
-                e.currentTarget.style.color = '#777';
+                e.currentTarget.style.borderColor = T.border;
+                e.currentTarget.style.color = T.textSecondary;
+              }}
+              style={{
+                padding: '4px 12px',
+                borderRadius: '6px',
+                border: `1px solid ${T.border}`,
+                background: T.bg3,
+                color: T.textSecondary,
+                fontSize: '11px',
+                fontFamily: T.body,
+                cursor: 'pointer',
+                letterSpacing: '0.02em',
+                transition: 'border-color 0.15s, color 0.15s',
               }}
             >
               {ex.name}
@@ -139,24 +277,32 @@ export default function Home({ onResult }) {
           ))}
         </div>
 
-        {/* DropZone */}
-        <DropZone
-          postText={postText}
-          onTextChange={(t) => { setPostText(t); setError(null); }}
-          onImageChange={handleImageChange}
-          uploadedImageUrl={uploadedImageUrl}
-        />
+        {/* DropZone with flash border */}
+        <div className={sec(4)} style={{
+          border: borderFlash ? `2px solid ${borderFlash}` : undefined,
+          borderRadius: borderFlash ? '18px' : undefined,
+          transition: 'border-color 0.1s',
+        }}>
+          <DropZone
+            postText={postText}
+            onTextChange={(t) => { setPostText(t); setError(null); }}
+            onImageChange={handleImageChange}
+            uploadedImageUrl={uploadedImageUrl}
+            charCountLabel={charCountLabel}
+          />
+        </div>
 
-        {/* Error block */}
+        {/* Error */}
         {error && (
           <div style={{
             marginTop: '12px',
-            background: '#ff17441a',
-            border: '1px solid #ff174440',
-            borderRadius: '8px',
+            background: 'rgba(255,68,68,0.08)',
+            border: '1px solid rgba(255,68,68,0.3)',
+            borderRadius: '10px',
             padding: '12px 16px',
-            color: '#ff6b6b',
+            color: T.red,
             fontSize: '13px',
+            fontFamily: T.body,
             lineHeight: 1.55,
             wordBreak: 'break-word',
           }}>
@@ -165,31 +311,70 @@ export default function Home({ onResult }) {
         )}
 
         {/* CTA */}
-        <button
-          onClick={handleCrash}
-          disabled={!canSubmit}
-          style={{
-            marginTop: '14px',
-            width: '100%',
-            padding: '16px',
-            fontSize: '14px',
-            fontWeight: 700,
-            fontFamily: 'inherit',
-            background: '#111',
-            color: canSubmit ? '#fff' : '#333',
-            border: `2px solid ${canSubmit ? '#2a2a2a' : '#181818'}`,
-            borderRadius: '10px',
-            cursor: loading ? 'not-allowed' : canSubmit ? 'pointer' : 'not-allowed',
-            letterSpacing: '2px',
-            textTransform: 'uppercase',
-            pointerEvents: loading ? 'none' : 'auto',
-            animation: loading ? 'ctto-pulse 0.8s ease-in-out infinite' : 'none',
-            transition: 'color 0.15s, border-color 0.15s',
-          }}
-        >
-          {loading ? 'Crashing...' : 'Crash It'}
-        </button>
-      </div>
+        <div className={sec(5)}>
+          <button
+            onClick={handleCrash}
+            disabled={!canSubmit}
+            onMouseEnter={() => setCtaHovered(true)}
+            onMouseLeave={() => setCtaHovered(false)}
+            style={{
+              marginTop: '14px',
+              width: '100%',
+              height: '56px',
+              fontFamily: T.display,
+              fontSize: '22px',
+              letterSpacing: '0.1em',
+              background: loading
+                ? 'linear-gradient(90deg, #e8ff47, #ffffff, #e8ff47)'
+                : canSubmit
+                  ? (ctaHovered ? T.accentDark : T.accent)
+                  : T.bg3,
+              backgroundSize: loading ? '200% auto' : 'auto',
+              color: canSubmit ? '#000' : T.textMuted,
+              border: 'none',
+              borderRadius: '12px',
+              cursor: canSubmit ? 'pointer' : 'not-allowed',
+              pointerEvents: loading ? 'none' : 'auto',
+              opacity: !canSubmit && !loading ? 0.3 : 1,
+              transform: ctaHovered && canSubmit && !loading ? 'translateY(-1px)' : 'translateY(0)',
+              transition: 'transform 0.15s, opacity 0.15s',
+              animation: loading ? 'ctto-shimmer 1.5s linear infinite' : 'none',
+            }}
+          >
+            {loading ? 'CRASHING...' : 'CRASH IT'}
+          </button>
+
+          {/* Loading message */}
+          {loading && (
+            <div style={{
+              marginTop: '10px',
+              textAlign: 'center',
+              fontFamily: T.body,
+              fontSize: '12px',
+              color: T.textMuted,
+              opacity: loadingMsgVisible ? 1 : 0,
+              transition: 'opacity 0.3s',
+              letterSpacing: '0.02em',
+            }}>
+              {LOADING_MESSAGES[loadingMsgIdx]}
+            </div>
+          )}
+
+          {/* Idle subtitle */}
+          {!loading && (
+            <div style={{
+              marginTop: '10px',
+              textAlign: 'center',
+              fontFamily: T.body,
+              fontSize: '12px',
+              color: T.textMuted,
+              letterSpacing: '0.02em',
+            }}>
+              powered by multi-agent simulation
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

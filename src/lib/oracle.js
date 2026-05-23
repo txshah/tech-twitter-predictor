@@ -142,8 +142,8 @@ export async function analyzePost(postText, platform, isImage) {
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'content-type': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + import.meta.env.VITE_OPENAI_API_KEY,
     },
     body: JSON.stringify({
       model: 'gpt-4o',
@@ -161,7 +161,7 @@ export async function analyzePost(postText, platform, isImage) {
   }
 
   const data = await response.json();
-  const raw = data?.choices?.[0]?.message?.content ?? '';
+  const raw = data.choices[0].message.content ?? '';
 
   const match = raw.match(/\{[\s\S]*\}/);
   if (!match) throw new Error(`CTTO oracle returned no JSON block. Raw response:\n${raw}`);

@@ -1,13 +1,13 @@
 import { useCallback, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { T } from '../lib/theme.js';
 
-export default function DropZone({ postText, onTextChange, onImageChange, uploadedImageUrl }) {
+export default function DropZone({ postText, onTextChange, onImageChange, uploadedImageUrl, charCountLabel }) {
   const inputRef = useRef(null);
 
   const onDrop = useCallback(async (acceptedFiles) => {
     const file = acceptedFiles[0];
     if (!file) return;
-
     if (file.type === 'text/plain') {
       const text = await file.text();
       onTextChange(text);
@@ -25,9 +25,7 @@ export default function DropZone({ postText, onTextChange, onImageChange, upload
     noClick: true,
   });
 
-  const handleUploadClick = () => {
-    inputRef.current?.click();
-  };
+  const handleUploadClick = () => inputRef.current?.click();
 
   const handleFileInputChange = async (e) => {
     const file = e.target.files?.[0];
@@ -41,18 +39,18 @@ export default function DropZone({ postText, onTextChange, onImageChange, upload
       <div
         {...getRootProps()}
         style={{
-          border: isDragActive ? '2px dashed #ff2d55' : '2px solid #242424',
-          borderRadius: '12px',
-          padding: '14px 16px',
-          background: isDragActive ? 'rgba(255,45,85,0.05)' : '#111',
-          transition: 'border-color 0.15s, background 0.15s',
+          background: isDragActive ? 'rgba(232,255,71,0.04)' : T.bg2,
+          border: isDragActive ? `2px solid ${T.accent}` : `1px solid ${T.border}`,
+          borderRadius: '16px',
           position: 'relative',
+          transition: 'border-color 0.15s, background 0.15s',
+          overflow: 'hidden',
         }}
       >
         <input {...getInputProps()} />
 
         {uploadedImageUrl && (
-          <div style={{ marginBottom: '10px' }}>
+          <div style={{ padding: '16px 16px 0' }}>
             <img
               src={uploadedImageUrl}
               alt="Uploaded screenshot"
@@ -61,27 +59,30 @@ export default function DropZone({ postText, onTextChange, onImageChange, upload
                 borderRadius: '8px',
                 display: 'block',
                 objectFit: 'contain',
+                border: `1px solid ${T.border}`,
               }}
             />
           </div>
         )}
 
         <textarea
+          className="ctto-textarea"
           value={postText}
           onChange={(e) => onTextChange(e.target.value)}
-          placeholder="Drop a post here, paste it, or upload a screenshot... CTTO will do the rest."
+          placeholder={"paste their post here. we'll tell you if it slaps or if they're cooked.\n(screenshots work too — we can read the cringe)"}
           style={{
             width: '100%',
             minHeight: '130px',
             background: 'transparent',
             border: 'none',
             outline: 'none',
-            color: '#f0f0f0',
+            color: T.textPrimary,
             fontSize: '14px',
-            fontFamily: 'inherit',
+            fontFamily: T.body,
             resize: 'vertical',
             lineHeight: 1.7,
             display: 'block',
+            padding: '16px',
           }}
         />
 
@@ -89,27 +90,30 @@ export default function DropZone({ postText, onTextChange, onImageChange, upload
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginTop: '8px',
+          padding: '8px 14px 10px',
+          borderTop: `1px solid ${T.border}`,
+          background: T.bg3,
         }}>
           <button
             type="button"
             onClick={handleUploadClick}
             style={{
               background: 'transparent',
-              border: '1px solid #333',
-              color: '#888',
-              padding: '5px 12px',
+              border: `1px solid ${T.border}`,
+              color: T.textMuted,
+              padding: '4px 12px',
               borderRadius: '6px',
               cursor: 'pointer',
-              fontFamily: 'inherit',
+              fontFamily: T.body,
               fontSize: '11px',
-              letterSpacing: '0.5px',
+              letterSpacing: '0.02em',
+              transition: 'border-color 0.15s, color 0.15s',
             }}
           >
-            Upload file
+            📎 attach evidence
           </button>
-          <span style={{ color: '#3a3a3a', fontSize: '11px' }}>
-            {postText.length} chars
+          <span style={{ fontFamily: T.mono, color: T.textMuted, fontSize: '11px' }}>
+            {charCountLabel ?? postText.length}
           </span>
         </div>
 
@@ -120,12 +124,12 @@ export default function DropZone({ postText, onTextChange, onImageChange, upload
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'rgba(255,45,85,0.07)',
-            borderRadius: '10px',
+            background: 'rgba(232,255,71,0.06)',
+            fontFamily: T.body,
             fontSize: '14px',
-            color: '#ff2d55',
-            fontWeight: 700,
-            letterSpacing: '1px',
+            fontWeight: 600,
+            color: T.accent,
+            letterSpacing: '0.05em',
             pointerEvents: 'none',
           }}>
             Drop image or .txt file

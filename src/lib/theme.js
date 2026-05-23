@@ -1,0 +1,20 @@
+// Hardcoded values used where CSS custom properties can't reach (recharts props, rgba computations)
+export const T = {
+  bg:          '#0a0a0a',
+  bg2:         '#111111',
+  bg3:         '#1a1a1a',
+  border:      'rgba(255,255,255,0.08)',
+  borderHover: 'rgba(255,255,255,0.18)',
+  textPrimary:   '#f5f5f0',
+  textSecondary: '#888880',
+  textMuted:     '#444440',
+  accent:      '#e8ff47',
+  accentDark:  '#c4d93a',
+  red:         '#ff4444',
+  green:       '#44ff88',
+  blue:        '#4488ff',
+  purple:      '#aa44ff',
+  display: '"Bebas Neue", Impact, cursive',
+  mono:    '"Space Mono", "Courier New", monospace',
+  body:    '"DM Sans", system-ui, sans-serif',
+};
